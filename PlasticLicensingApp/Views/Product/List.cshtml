@@ -1,0 +1,75 @@
+@model IEnumerable<PlasticLicensingApp.Models.Product>
+@{
+    ViewData["Title"] = "Products - " + ViewBag.SupplierName;
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a asp-controller="Supplier" asp-action="Index">My Companies</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewBag.SupplierName</li>
+              </ol>
+            </nav>
+            <h2 class="text-success"><i class="fas fa-box-open me-2"></i>Products</h2>
+        </div>
+        <a asp-action="Create" asp-route-supplierId="@ViewBag.SupplierId" class="btn btn-success rounded-pill shadow-sm">
+            <i class="fas fa-plus me-1"></i> Create Product
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card shadow-sm border-0 text-center p-5">
+            <div class="card-body">
+                <div class="display-1 text-muted mb-4"><i class="fas fa-boxes"></i></div>
+                <h4>No Products Found</h4>
+                <p class="text-muted mb-4">This company hasn't submitted any products for licensing yet.</p>
+                <a asp-action="Create" asp-route-supplierId="@ViewBag.SupplierId" class="btn btn-lg btn-success rounded-pill px-5">Submit First Product</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary">
+                        <tr>
+                            <th class="ps-4">Product Name</th>
+                            <th>Status</th>
+                            <th>Submitted On</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-bold">@item.ProductName</td>
+                                <td>
+                                    @if (item.Status != null)
+                                    {
+                                        var statusClass = item.Status.StatusName switch
+                                        {
+                                            "Approved" => "bg-success",
+                                            "Rejected" or "Denied" => "bg-danger",
+                                            "Submitted" => "bg-primary",
+                                            _ => "bg-secondary"
+                                        };
+                                        <span class="badge @statusClass">@item.Status.StatusName</span>
+                                    }
+                                </td>
+                                <td>@item.CreatedDate.ToString("dd MMM yyyy")</td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-sm btn-outline-secondary rounded-pill">View Details</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,136 @@
+{
+  "task_id": 54,
+  "task_name": "SampleProject1",
+  "execution_path": "planner_coder",
+  "complexity_tier": "medium",
+  "requirement_text": "Implement the “View Products” functionality for each Supplier Company in My Supplier Companies.\n\n1. Clicking View Products should display all products associated with that Supplier Company.\n2. Use the existing product/database tables and relationships. Do not create duplicate tables or invent a new data model.\n3. Add a “Create Product” button on the products page.\n4. The create-product form should use the existing product schema, fields, validation, API/services, and UI patterns.\n5. Ensure the new product is correctly associated with the selected Supplier Company.\n6. After creating a product, refresh the list so it appears immediately.\n7. Follow the existing tech stack, architecture, styling, and components.\n8. Include appropriate loading, error, success, and authorization handling.\n9. Do not modify unrelated functionality.",
+  "generated_at": "2026-08-11T11:31:25.752Z",
+  "requirements": [
+    {
+      "req_id": "R-001",
+      "text": "The system shall allow users to view all products associated with a specific Supplier Company by clicking a 'View Products' action.",
+      "status": "covered",
+      "covered_by": [
+        "T-001"
+      ]
+    },
+    {
+      "req_id": "R-002",
+      "text": "The product display functionality must utilize existing database tables, schemas, and relationships without duplicating data models.",
+      "status": "uncovered",
+      "covered_by": []
+    },
+    {
+      "req_id": "R-003",
+      "text": "A 'Create Product' button shall be provided on the products listing page.",
+      "status": "covered",
+      "covered_by": [
+        "T-002"
+      ]
+    },
+    {
+      "req_id": "R-004",
+      "text": "The product creation form must adhere to existing validation rules, services, and patterns.",
+      "status": "covered",
+      "covered_by": [
+        "T-002"
+      ]
+    },
+    {
+      "req_id": "R-005",
+      "text": "New products must be correctly associated with the selected Supplier Company upon creation.",
+      "status": "covered",
+      "covered_by": [
+        "T-002"
+      ]
+    },
+    {
+      "req_id": "R-006",
+      "text": "The product list must automatically refresh to display the newly created item immediately.",
+      "status": "covered",
+      "covered_by": [
+        "T-002"
+      ]
+    },
+    {
+      "req_id": "R-007",
+      "text": "The implementation must follow existing architecture, styling, and UI components.",
+      "status": "covered",
+      "covered_by": [
+        "T-001",
+        "T-002"
+      ]
+    },
+    {
+      "req_id": "R-008",
+      "text": "The system shall provide appropriate loading states, error handling, success notifications, and authorization checks.",
+      "status": "covered",
+      "covered_by": [
+        "T-002"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "T-001",
+      "name": "Backend & UI — Product List and Navigation",
+      "status": "completed",
+      "req_refs": [
+        "R-001",
+        "R-007"
+      ],
+      "files_written": [],
+      "module": "PlannerCoder",
+      "feature": "Implement the “View Products” functionality for each Supp...",
+      "validation": {
+        "compiled": true,
+        "spec_alignment": "unchecked"
+      }
+    },
+    {
+      "task_id": "T-002",
+      "name": "UI — Refined Product Creation Flow",
+      "status": "completed",
+      "req_refs": [
+        "R-003",
+        "R-004",
+        "R-005",
+        "R-006",
+        "R-007",
+        "R-008"
+      ],
+      "files_written": [],
+      "module": "PlannerCoder",
+      "feature": "Implement the “View Products” functionality for each Supp...",
+      "validation": {
+        "compiled": true,
+        "spec_alignment": "unchecked"
+      }
+    },
+    {
+      "task_id": "T-0",
+      "name": "Analysing and planning implementation...",
+      "status": "pending",
+      "req_refs": [],
+      "files_written": [],
+      "module": "PlannerCoder",
+      "feature": "Implement the “View Products” functionality for each Supplier Company in My Supp",
+      "validation": {
+        "compiled": true,
+        "spec_alignment": "unchecked"
+      }
+    }
+  ],
+  "coverage_summary": {
+    "total_requirements": 8,
+    "covered": 7,
+    "partial": 0,
+    "uncovered": 1,
+    "coverage_pct": 88,
+    "total_tasks": 3,
+    "tasks_completed": 2,
+    "tasks_failed": 0,
+    "files_written": 0,
+    "validation_status": "passed"
+  }
+}

@@ -39,7 +39,7 @@
                             
                             <div class="d-flex gap-2 mt-auto">
                                 <a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-outline-success flex-fill rounded-pill btn-sm">Edit Profile</a>
-                                <a href="#" class="btn btn-success flex-fill rounded-pill btn-sm">View Products</a>
+                                <a asp-controller="Product" asp-action="List" asp-route-supplierId="@item.ID" class="btn btn-success flex-fill rounded-pill btn-sm">View Products</a>
                             </div>
                         </div>
                     </div>

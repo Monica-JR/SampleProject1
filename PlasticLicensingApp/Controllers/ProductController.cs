@@ -19,6 +19,24 @@ namespace PlasticLicensingApp.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> List(int supplierId)
+        {
+            var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.ID == supplierId);
+            if (supplier == null) return NotFound();
+
+            var products = await _context.Products
+                .Include(p => p.Status)
+                .Where(p => p.SupplierID == supplierId)
+                .OrderByDescending(p => p.CreatedDate)
+                .ToListAsync();
+
+            ViewBag.SupplierId = supplierId;
+            ViewBag.SupplierName = supplier.SupplierCompanyName;
+
+            return View(products);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Create(int supplierId)
         {
             var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.ID == supplierId);
@@ -44,7 +62,8 @@ namespace PlasticLicensingApp.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
             
             // Get "Submitted" status for Product
             var status = await _context.Statuses

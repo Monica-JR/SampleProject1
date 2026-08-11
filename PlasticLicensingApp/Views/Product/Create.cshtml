@@ -7,14 +7,15 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card shadow border-0">
-                <div class="card-header bg-success text-white py-3">
+                <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center">
                     <h3 class="mb-0"><i class="fas fa-box-open me-2"></i>Submit New Product</h3>
+                    <a asp-action="List" asp-route-supplierId="@Model.SupplierID" class="btn btn-sm btn-light rounded-pill">Cancel</a>
                 </div>
                 <div class="card-body p-4">
                     <div id="submissionForm">
                         <div class="mb-4">
                             <label class="form-label fw-bold">Product Name</label>
-                            <input type="text" class="form-control form-control-lg" data-bind="value: productName" placeholder="e.g. Recycled PET Container" />
+                            <input type="text" class="form-control form-control-lg" data-bind="value: productName, valueUpdate: 'afterkeydown'" placeholder="e.g. Recycled PET Container" />
                         </div>
 
                         <hr />
@@ -28,7 +29,7 @@
                         </div>
 
                         <div class="mt-4 d-grid">
-                            <button class="btn btn-success btn-lg py-3 fw-bold" data-bind="click: submitProduct, disable: isSubmitting">
+                            <button class="btn btn-success btn-lg py-3 fw-bold" data-bind="click: submitProduct, disable: isSubmitting() || !productName()">
                                 <span class="spinner-border spinner-border-sm me-2" data-bind="visible: isSubmitting"></span>
                                 <span data-bind="text: isSubmitting() ? 'Submitting...' : 'Submit Product for Certification'"></span>
                             </button>
@@ -64,6 +65,7 @@
 
                 self.isSubmitting(true);
                 self.errorMessage('');
+                self.successMessage('');
 
                 var data = {
                     supplierId: self.supplierId,
@@ -76,13 +78,17 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error("Submission failed");
+                    return response.json();
+                })
                 .then(result => {
                     if (result.success) {
                         self.successMessage(result.message);
-                        setTimeout(function() { window.location.href = '/Supplier'; }, 2000);
+                        // Redirect to product list so it appears immediately
+                        setTimeout(function() { window.location.href = '/Product/List?supplierId=' + self.supplierId; }, 1500);
                     } else {
-                        self.errorMessage("An error occurred during submission.");
+                        self.errorMessage(result.message || "An error occurred during submission.");
                     }
                 })
                 .catch(err => {
