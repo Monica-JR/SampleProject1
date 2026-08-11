@@ -38,7 +38,7 @@
                             <p class="card-text text-muted mb-4"><i class="fas fa-calendar-alt me-2"></i>Since @item.CreatedDate.ToString("MMM yyyy")</p>
                             
                             <div class="d-flex gap-2 mt-auto">
-                                <a href="#" class="btn btn-outline-success flex-fill rounded-pill btn-sm">Edit Profile</a>
+                                <a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-outline-success flex-fill rounded-pill btn-sm">Edit Profile</a>
                                 <a href="#" class="btn btn-success flex-fill rounded-pill btn-sm">View Products</a>
                             </div>
                         </div>

@@ -27,8 +27,7 @@ namespace PlasticLicensingApp.Controllers
                 .Include(s => s.Address)
                 .Where(s => s.CreatedBy == userId)
                 .Select(s => new SupplierDashboardViewModel
-                {
-                    ID = s.ID,
+                {                    ID = s.ID,
                     CompanyName = s.SupplierCompanyName,
                     City = s.Address.City,
                     State = s.Address.State,
@@ -69,8 +68,7 @@ namespace PlasticLicensingApp.Controllers
                 else
                 {
                     var address = new Address
-                    {
-                        Line1 = model.Line1 ?? "",
+                    {                        Line1 = model.Line1 ?? "",
                         Line2 = model.Line2,
                         City = model.City ?? "",
                         State = model.State ?? "",
@@ -86,8 +84,7 @@ namespace PlasticLicensingApp.Controllers
                 }
 
                 var supplier = new Supplier
-                {
-                    SupplierCompanyName = model.SupplierCompanyName,
+                {                    SupplierCompanyName = model.SupplierCompanyName,
                     AddressID = addressId,
                     CreatedBy = userId,
                     CreatedDate = DateTime.Now
@@ -103,6 +100,71 @@ namespace PlasticLicensingApp.Controllers
             {
                 await transaction.RollbackAsync();
                 ModelState.AddModelError("", "An error occurred while saving. Please try again.");
+                return View(model);
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var supplier = await _context.Suppliers
+                .Include(s => s.Address)
+                .FirstOrDefaultAsync(s => s.ID == id && s.CreatedBy == userId);
+
+            if (supplier == null) return NotFound();
+
+            var model = new SupplierEditViewModel
+            {
+                ID = supplier.ID,
+                SupplierCompanyName = supplier.SupplierCompanyName,
+                Line1 = supplier.Address.Line1,
+                Line2 = supplier.Address.Line2,
+                City = supplier.Address.City,
+                State = supplier.Address.State,
+                Pincode = supplier.Address.Pincode,
+                Country = supplier.Address.Country,
+                Phone = supplier.Address.Phone
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [FromForm] SupplierEditViewModel model)
+        {
+            if (id != model.ID) return BadRequest();
+            if (!ModelState.IsValid) return View(model);
+
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var supplier = await _context.Suppliers
+                .Include(s => s.Address)
+                .FirstOrDefaultAsync(s => s.ID == id && s.CreatedBy == userId);
+
+            if (supplier == null) return NotFound();
+
+            supplier.SupplierCompanyName = model.SupplierCompanyName;
+            supplier.Address.Line1 = model.Line1;
+            supplier.Address.Line2 = model.Line2;
+            supplier.Address.City = model.City;
+            supplier.Address.State = model.State;
+            supplier.Address.Pincode = model.Pincode;
+            supplier.Address.Country = model.Country;
+            supplier.Address.Phone = model.Phone;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError("", "An error occurred while updating the profile. Please try again.");
                 return View(model);
             }
         }
