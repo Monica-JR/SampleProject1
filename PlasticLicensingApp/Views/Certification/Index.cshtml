@@ -1,0 +1,136 @@
+@{
+    ViewData["Title"] = "Plastic Item Certification";
+}
+
+<div id="certification-app">
+    <h2>Plastic Item Certification</h2>
+
+    <div class="card mb-4">
+        <div class="card-header">Submit New Item</div>
+        <div class="card-body">
+            <form data-bind="submit: submitItem">
+                <div class="mb-3">
+                    <label class="form-label">Item Name</label>
+                    <input type="text" class="form-control" data-bind="value: newItem.name" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Material Type</label>
+                    <select class="form-control" data-bind="value: newItem.materialType" required>
+                        <option value="">Select Material...</option>
+                        <option value="PET">PET (Polyethylene Terephthalate)</option>
+                        <option value="HDPE">HDPE (High-Density Polyethylene)</option>
+                        <option value="PVC">PVC (Polyvinyl Chloride)</option>
+                        <option value="LDPE">LDPE (Low-Density Polyethylene)</option>
+                        <option value="PP">PP (Polypropylene)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Supplier</label>
+                    <select class="form-control" data-bind="options: suppliers, optionsText: 'name', optionsValue: 'id', value: newItem.supplierId, optionsCaption: 'Select Supplier...'" required></select>
+                </div>
+                <button type="submit" class="btn btn-primary" data-bind="enable: !isSubmitting()">
+                    <span data-bind="visible: isSubmitting" class="spinner-border spinner-border-sm"></span>
+                    Submit for Certification
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <h3>Submitted Items</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Material</th>
+                <th>Supplier</th>
+                <th>Status</th>
+                <th>Request Date</th>
+            </tr>
+        </thead>
+        <tbody data-bind="foreach: items">
+            <tr>
+                <td data-bind="text: name"></td>
+                <td data-bind="text: materialType"></td>
+                <td data-bind="text: supplier ? supplier.name : 'Unknown'"></td>
+                <td>
+                    <span class="badge" data-bind="text: certificationStatusText, css: certificationStatusClass"></span>
+                </td>
+                <td data-bind="text: new Date(certification.requestDate).toLocaleDateString()"></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        function CertificationViewModel() {
+            var self = this;
+
+            // Observables
+            self.items = ko.observableArray([]);
+            self.suppliers = ko.observableArray([]);
+            self.isSubmitting = ko.observable(false);
+
+            self.newItem = {
+                name: ko.observable(''),
+                materialType: ko.observable(''),
+                supplierId: ko.observable('')
+            };
+
+            // Helpers
+            self.loadData = function() {
+                $.getJSON('/Certification/GetSuppliers', function(data) {
+                    self.suppliers(data);
+                });
+                $.getJSON('/Certification/GetItems', function(data) {
+                    var mapped = data.map(function(item) {
+                        item.certificationStatusText = ko.pureComputed(function() {
+                            var status = item.certification ? item.certification.status : 0;
+                            return status === 0 ? 'Pending' : (status === 1 ? 'Approved' : 'Rejected');
+                        });
+                        item.certificationStatusClass = ko.pureComputed(function() {
+                            var status = item.certification ? item.certification.status : 0;
+                            return status === 0 ? 'bg-warning text-dark' : (status === 1 ? 'bg-success' : 'bg-danger');
+                        });
+                        return item;
+                    });
+                    self.items(mapped);
+                });
+            };
+
+            self.submitItem = function() {
+                self.isSubmitting(true);
+                var data = {
+                    name: self.newItem.name(),
+                    materialType: self.newItem.materialType(),
+                    supplierId: parseInt(self.newItem.supplierId())
+                };
+
+                $.ajax({
+                    url: '/Certification/SubmitItem',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        alert('Item submitted successfully!');
+                        self.newItem.name('');
+                        self.newItem.materialType('');
+                        self.newItem.supplierId('');
+                        self.loadData();
+                    },
+                    error: function() {
+                        alert('Error submitting item.');
+                    },
+                    complete: function() {
+                        self.isSubmitting(false);
+                    }
+                });
+            };
+
+            // Init
+            self.loadData();
+        }
+
+        ko.applyBindings(new CertificationViewModel(), document.getElementById('certification-app'));
+    </script>
+}

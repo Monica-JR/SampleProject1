@@ -1,0 +1,105 @@
+@{
+    ViewData["Title"] = "Sign In";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-lg border-0 rounded-lg mt-5">
+                <div class="card-header bg-success text-white text-center py-4">
+                    <h3 class="font-weight-light my-1"><i class="fas fa-lock mr-2"></i>Sign In</h3>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Error Message Block -->
+                    <div class="alert alert-danger" data-bind="visible: errorMessage, text: errorMessage" style="display: none;"></div>
+
+                    <form data-bind="submit: login">
+                        <div class="form-floating mb-3">
+                            <input class="form-control" id="inputEmail" type="email" placeholder="name@example.com" 
+                                   data-bind="value: email" required />
+                            <label for="inputEmail">Email address</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input class="form-control" id="inputPassword" data-bind="attr: { type: showPassword() ? 'text' : 'password' }, value: password" 
+                                   placeholder="Password" required />
+                            <label for="inputPassword">Password</label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" id="inputRememberPassword" type="checkbox" data-bind="checked: rememberMe" />
+                            <label class="form-check-label" for="inputRememberPassword">Remember password</label>
+                            <span class="float-end">
+                                <a href="#" class="small text-decoration-none" data-bind="click: togglePassword">
+                                    <i class="fas" data-bind="class: showPassword() ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    <span data-bind="text: showPassword() ? 'Hide' : 'Show'"></span>
+                                </a>
+                            </span>
+                        </div>
+                        <div class="d-grid mt-4 mb-0">
+                            <button class="btn btn-success btn-block py-3" type="submit" data-bind="disabled: isSubmitting">
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" data-bind="visible: isSubmitting"></span>
+                                <span data-bind="text: isSubmitting() ? 'Signing in...' : 'Sign In'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center py-3">
+                    <div class="small"><a asp-action="Register" class="text-success text-decoration-none">Need an account? Sign up!</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.js"></script>
+    <script>
+        function LoginViewModel() {
+            var self = this;
+            self.email = ko.observable('');
+            self.password = ko.observable('');
+            self.rememberMe = ko.observable(false);
+            self.showPassword = ko.observable(false);
+            self.isSubmitting = ko.observable(false);
+            self.errorMessage = ko.observable('');
+
+            self.togglePassword = function() {
+                self.showPassword(!self.showPassword());
+            };
+
+            self.login = function () {
+                self.isSubmitting(true);
+                self.errorMessage('');
+
+                var data = {
+                    email: self.email(),
+                    password: self.password(),
+                    rememberMe: self.rememberMe()
+                };
+
+                fetch('/Account/Login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                })
+                .then(async response => {
+                    const result = await response.json().catch(() => null);
+                    if (response.ok) {
+                        window.location.href = result.redirectUrl || '/Supplier';
+                    } else {
+                        // Handle the error message from the server
+                        const msg = typeof result === 'string' ? result : (result?.message || 'Invalid login attempt.');
+                        self.errorMessage(response.status === 401 ? "Invalid email or password." : msg);
+                    }
+                })
+                .catch(error => {
+                    self.errorMessage("An error occurred during login. Please try again.");
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    self.isSubmitting(false);
+                });
+            };
+        }
+        ko.applyBindings(new LoginViewModel());
+    </script>
+}

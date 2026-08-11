@@ -1,0 +1,158 @@
+@{
+    ViewData["Title"] = "User Registration";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-success text-white text-center py-3">
+                    <h3 class="mb-0">User Registration</h3>
+                </div>
+                <div class="card-body p-4">
+                    <div id="registerForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name</label>
+                                <input type="text" class="form-control" data-bind="value: firstName" placeholder="First Name">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" class="form-control" data-bind="value: lastName" placeholder="Last Name">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" data-bind="value: email" placeholder="email@example.com">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" data-bind="value: password" placeholder="Create a password">
+                        </div>
+
+                        <hr />
+                        <h5 class="text-success mb-3">Address Information</h5>
+
+                        <div class="mb-3">
+                            <label class="form-label">Street Address</label>
+                            <input type="text" class="form-control" data-bind="value: line1" placeholder="123 Main St">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-control" data-bind="value: city" placeholder="City">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">State/Province</label>
+                                <input type="text" class="form-control" data-bind="value: state" placeholder="State">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Pincode/Zip</label>
+                                <input type="text" class="form-control" data-bind="value: pincode" placeholder="Pincode">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Country</label>
+                                <input type="text" class="form-control" data-bind="value: country" placeholder="Country">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" data-bind="value: phone" placeholder="Phone Number">
+                        </div>
+
+                        <div class="alert alert-danger" data-bind="visible: errorMessage, text: errorMessage" style="display:none"></div>
+                        <div class="alert alert-success" data-bind="visible: successMessage, text: successMessage" style="display:none"></div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button class="btn btn-success btn-lg" data-bind="click: register, disable: isSubmitting">
+                                <span class="spinner-border spinner-border-sm" data-bind="visible: isSubmitting"></span>
+                                <span data-bind="text: isSubmitting() ? 'Processing...' : 'Register User'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <p>Already have an account? <a asp-action="Login">Login here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.js"></script>
+    <script>
+        function RegisterViewModel() {
+            var self = this;
+            self.firstName = ko.observable('');
+            self.lastName = ko.observable('');
+            self.email = ko.observable('');
+            self.password = ko.observable('');
+            
+            self.line1 = ko.observable('');
+            self.line2 = ko.observable('');
+            self.city = ko.observable('');
+            self.state = ko.observable('');
+            self.pincode = ko.observable('');
+            self.country = ko.observable('');
+            self.phone = ko.observable('');
+
+            self.isSubmitting = ko.observable(false);
+            self.errorMessage = ko.observable('');
+            self.successMessage = ko.observable('');
+
+            self.register = function () {
+                if (!self.email() || !self.password() || !self.line1() || !self.city()) {
+                    self.errorMessage("Please fill in all required fields including address.");
+                    return;
+                }
+
+                self.isSubmitting(true);
+                self.errorMessage('');
+
+                var data = {
+                    firstName: self.firstName(),
+                    lastName: self.lastName(),
+                    email: self.email(),
+                    password: self.password(),
+                    line1: self.line1(),
+                    line2: self.line2(),
+                    city: self.city(),
+                    state: self.state(),
+                    pincode: self.pincode(),
+                    country: self.country(),
+                    phone: self.phone()
+                };
+
+                fetch('/Account/Register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json().then(res => ({ ok: response.ok, body: res })))
+                .then(res => {
+                    if (res.ok) {
+                        self.successMessage("Registration successful! Redirecting to login...");
+                        setTimeout(() => window.location.href = '/Account/Login', 2000);
+                    } else {
+                        self.errorMessage(res.body.message || "Registration failed.");
+                        self.isSubmitting(false);
+                    }
+                })
+                .catch(() => {
+                    self.errorMessage("An error occurred during registration.");
+                    self.isSubmitting(false);
+                });
+            };
+        }
+        ko.applyBindings(new RegisterViewModel());
+    </script>
+}

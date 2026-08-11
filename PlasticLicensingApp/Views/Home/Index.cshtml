@@ -1,0 +1,145 @@
+@{
+    ViewData["Title"] = "Sustainable Plastic Licensing";
+}
+
+<div class="hero-section py-5 mb-5 bg-light border-bottom">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold text-dark mb-4">Certified Sustainable Plastic Solutions</h1>
+                <p class="lead text-muted mb-4">
+                    Join the global standard for plastic recyclability and safety. We provide the framework 
+                    to certify household items, ensuring they meet the highest environmental standards.
+                </p>
+                <div class="d-grid gap-3 d-sm-flex">
+                    <a href="/Account/Register" class="btn btn-success btn-lg px-4 rounded-pill shadow">Register Now</a>
+                    <a href="#how-it-works" class="btn btn-outline-secondary btn-lg px-4 rounded-pill">Learn More</a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block text-center">
+                <div class="p-5">
+                    <i class="fas fa-recycle fa-10x text-success opacity-25"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5" id="how-it-works">
+    <div class="row text-center mb-5">
+        <div class="col-lg-12">
+            <h2 class="fw-bold">How the Process Works</h2>
+            <p class="text-muted">Simple, transparent, and standardized certification steps.</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Step 1: User Registration -->
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-3">
+                <div class="card-body">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-user-plus fa-lg"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">1. User Registration</h5>
+                    <p class="card-text text-muted small">Create your personal account to gain access to the secure licensing portal.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Supplier Profile -->
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-3">
+                <div class="card-body">
+                    <div class="rounded-circle bg-success text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-building fa-lg"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">2. Supplier Setup</h5>
+                    <p class="card-text text-muted small">Once registered as a user, complete your company profile to start submitting items.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Product Analysis -->
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-3">
+                <div class="card-body">
+                    <div class="rounded-circle bg-info text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-flask fa-lg"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">3. Technical Review</h5>
+                    <p class="card-text text-muted small">Submit your plastic items and technical parameters for rigorous environmental analysis.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Licensing -->
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-3">
+                <div class="card-body">
+                    <div class="rounded-circle bg-warning text-dark d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-certificate fa-lg"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">4. Final License</h5>
+                    <p class="card-text text-muted small">Receive your official certification and 4-digit unique license number.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5 bg-white shadow-sm rounded-4 mb-5">
+    <div class="row text-center" id="statsContainer">
+        <div class="col-md-4 mb-4">
+            <h3 class="display-5 fw-bold text-primary" data-bind="text: totalProducts">0</h3>
+            <p class="text-muted text-uppercase small ls-wide">Products Analyzed</p>
+        </div>
+        <div class="col-md-4 mb-4 border-start border-end d-none d-md-block">
+            <h3 class="display-5 fw-bold text-success" data-bind="text: activeLicenses">0</h3>
+            <p class="text-muted text-uppercase small ls-wide">Active Licenses</p>
+        </div>
+        <!-- For mobile view borders -->
+        <div class="col-md-4 mb-4 d-md-none">
+            <h3 class="display-5 fw-bold text-success" data-bind="text: activeLicenses">0</h3>
+            <p class="text-muted text-uppercase small ls-wide">Active Licenses</p>
+        </div>
+        <div class="col-md-4">
+            <h3 class="display-5 fw-bold text-warning" data-bind="text: pendingReviews">0</h3>
+            <p class="text-muted text-uppercase small ls-wide">Pending Reviews</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.js"></script>
+    <script>
+        function HomeViewModel() {
+            var self = this;
+            self.totalProducts = ko.observable(0);
+            self.activeLicenses = ko.observable(0);
+            self.pendingReviews = ko.observable(0);
+
+            // Animate numbers for high-end feel
+            function animateValue(observable, start, end, duration) {
+                var range = end - start;
+                var current = start;
+                var increment = end > start ? 1 : -1;
+                var stepTime = Math.abs(Math.floor(duration / range));
+                var timer = setInterval(function() {
+                    current += increment;
+                    observable(current);
+                    if (current == end) clearInterval(timer);
+                }, stepTime);
+            }
+
+            // Simulated initial data fetch
+            setTimeout(function() {
+                animateValue(self.totalProducts, 0, 1240, 1500);
+                animateValue(self.activeLicenses, 0, 856, 1500);
+                animateValue(self.pendingReviews, 0, 42, 1000);
+            }, 500);
+        }
+
+        ko.applyBindings(new HomeViewModel(), document.getElementById('statsContainer'));
+    </script>
+}

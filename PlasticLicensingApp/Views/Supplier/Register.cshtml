@@ -1,0 +1,115 @@
+@{
+    ViewData["Title"] = "Register Supplier Company";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <h2 class="mb-0"><i class="fas fa-building me-2"></i>Register New Company</h2>
+                </div>
+                <div class="card-body p-4">
+                    <form id="supplierForm" method="POST" action="/Supplier/Register">
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Company Name</label>
+                            <input type="text" name="supplierCompanyName" class="form-control form-control-lg" placeholder="e.g. EcoPlastics Ltd" required>
+                        </div>
+
+                        <hr>
+                        <h4 class="mb-3 text-muted">Company Address</h4>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="useProfileAddress" name="UseProfileAddress" data-bind="checked: useProfileAddress">
+                            <label class="form-check-label" for="useProfileAddress">Use my personal profile address</label>
+                        </div>
+
+                        <div data-bind="style: { opacity: useProfileAddress() ? '0.5' : '1' }">
+                            <div class="mb-3">
+                                <label class="form-label">Address Line 1</label>
+                                <input type="text" name="Line1" class="form-control" data-bind="value: line1, enable: !useProfileAddress()" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Address Line 2 (Optional)</label>
+                                <input type="text" name="Line2" class="form-control" data-bind="value: line2, enable: !useProfileAddress()">
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">City</label>
+                                    <input type="text" name="City" class="form-control" data-bind="value: city, enable: !useProfileAddress()" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">State</label>
+                                    <input type="text" name="State" class="form-control" data-bind="value: state, enable: !useProfileAddress()" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Pincode</label>
+                                    <input type="text" name="Pincode" class="form-control" data-bind="value: pincode, enable: !useProfileAddress()" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Country</label>
+                                    <input type="text" name="Country" class="form-control" data-bind="value: country, enable: !useProfileAddress()" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <input type="text" name="Phone" class="form-control" data-bind="value: phone, enable: !useProfileAddress()" required placeholder="e.g. +91 98765 43210">
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill">
+                                Register Company
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.js"></script>
+    <script>
+        function SupplierViewModel() {
+            var self = this;
+            self.useProfileAddress = ko.observable(false);
+            self.line1 = ko.observable('');
+            self.line2 = ko.observable('');
+            self.city = ko.observable('');
+            self.state = ko.observable('');
+            self.pincode = ko.observable('');
+            self.country = ko.observable('');
+            self.phone = ko.observable('');
+
+            self.useProfileAddress.subscribe(function(newValue) {
+                if (newValue) {
+                    fetch('/Supplier/GetProfileAddress')
+                        .then(response => response.json())
+                        .then(data => {
+                            self.line1(data.line1);
+                            self.line2(data.line2);
+                            self.city(data.city);
+                            self.state(data.state);
+                            self.pincode(data.pincode);
+                            self.country(data.country);
+                            self.phone(data.phone);
+                        });
+                } else {
+                    self.line1(''); self.line2(''); self.city(''); self.state('');
+                    self.pincode(''); self.country(''); self.phone('');
+                }
+            });
+        }
+        ko.applyBindings(new SupplierViewModel());
+    </script>
+}

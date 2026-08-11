@@ -1,0 +1,97 @@
+@model PlasticLicensingApp.ViewModels.ProductSubmissionViewModel
+@{
+    ViewData["Title"] = "Submit New Product";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <h3 class="mb-0"><i class="fas fa-box-open me-2"></i>Submit New Product</h3>
+                </div>
+                <div class="card-body p-4">
+                    <div id="submissionForm">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Product Name</label>
+                            <input type="text" class="form-control form-control-lg" data-bind="value: productName" placeholder="e.g. Recycled PET Container" />
+                        </div>
+
+                        <hr />
+                        <h5 class="mb-3 text-secondary">Technical Parameters</h5>
+                        
+                        <div class="row g-3" data-bind="foreach: parameters">
+                            <div class="col-md-6">
+                                <label class="form-label" data-bind="text: parameterName"></label>
+                                <input type="text" class="form-control" data-bind="value: value" placeholder="Enter value..." />
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-grid">
+                            <button class="btn btn-success btn-lg py-3 fw-bold" data-bind="click: submitProduct, disable: isSubmitting">
+                                <span class="spinner-border spinner-border-sm me-2" data-bind="visible: isSubmitting"></span>
+                                <span data-bind="text: isSubmitting() ? 'Submitting...' : 'Submit Product for Certification'"></span>
+                            </button>
+                        </div>
+
+                        <div class="alert alert-danger mt-3" data-bind="visible: errorMessage, text: errorMessage"></div>
+                        <div class="alert alert-success mt-3" data-bind="visible: successMessage, text: successMessage"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.js"></script>
+    <script>
+        function ProductViewModel() {
+            var self = this;
+            self.supplierId = @Model.SupplierID;
+            self.productName = ko.observable('');
+            self.isSubmitting = ko.observable(false);
+            self.errorMessage = ko.observable('');
+            self.successMessage = ko.observable('');
+
+            self.parameters = ko.observableArray(@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Parameters)));
+
+            self.submitProduct = function() {
+                if (!self.productName()) {
+                    self.errorMessage("Product Name is required.");
+                    return;
+                }
+
+                self.isSubmitting(true);
+                self.errorMessage('');
+
+                var data = {
+                    supplierId: self.supplierId,
+                    productName: self.productName(),
+                    parameters: ko.toJS(self.parameters)
+                };
+
+                fetch('/Product/Create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        self.successMessage(result.message);
+                        setTimeout(function() { window.location.href = '/Supplier'; }, 2000);
+                    } else {
+                        self.errorMessage("An error occurred during submission.");
+                    }
+                })
+                .catch(err => {
+                    self.errorMessage("Server error. Please try again.");
+                })
+                .finally(() => self.isSubmitting(false));
+            };
+        }
+
+        ko.applyBindings(new ProductViewModel(), document.getElementById('submissionForm'));
+    </script>
+}
