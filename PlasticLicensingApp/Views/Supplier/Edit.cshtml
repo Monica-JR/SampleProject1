@@ -11,8 +11,22 @@
                     <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Supplier Profile</h4>
                 </div>
                 <div class="card-body p-4">
+                    <div class="mb-4 p-3 bg-light rounded shadow-sm border-start border-4 border-success">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">License Status</small>
+                                <span class="fw-bold text-success">@Model.LicenseStatus</span>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">License Number</small>
+                                <span class="fw-bold">@(string.IsNullOrEmpty(Model.LicenseNumber) ? "Not Available (Pending Active Status)" : Model.LicenseNumber)</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <form asp-action="Edit" method="post">
                         <input type="hidden" asp-for="ID" />
+                        @* License fields are removed from the form inputs to prevent submission/editing *@
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                         <h5 class="text-success mb-3 border-bottom pb-2">Company Details</h5>

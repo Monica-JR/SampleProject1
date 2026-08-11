@@ -9,5 +9,7 @@ namespace PlasticLicensingApp.ViewModels
         public string City { get; set; }
         public string State { get; set; }
         public DateTime CreatedDate { get; set; }
+        public string LicenseNumber { get; set; }
+        public string LicenseStatus { get; set; }
     }
 }

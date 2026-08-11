@@ -31,7 +31,9 @@ namespace PlasticLicensingApp.Controllers
                     CompanyName = s.SupplierCompanyName,
                     City = s.Address.City,
                     State = s.Address.State,
-                    CreatedDate = s.CreatedDate
+                    CreatedDate = s.CreatedDate,
+                    LicenseStatus = _context.Licenses.Where(l => l.SupplierID == s.ID).Select(l => l.Status.StatusName).FirstOrDefault(),
+                    LicenseNumber = _context.Licenses.Where(l => l.SupplierID == s.ID && l.Status.StatusName == "Active").Select(l => l.LicenseNumber).FirstOrDefault()
                 }).ToListAsync();
 
             return View(suppliers);
@@ -59,8 +61,7 @@ namespace PlasticLicensingApp.Controllers
                     if (user == null) return BadRequest("User not found");
                     
                     if (user.AddressID == null) 
-                    {
-                        ModelState.AddModelError("", "No profile address found. Please enter a new address.");
+                    {                        ModelState.AddModelError("", "No profile address found. Please enter a new address.");
                         return View(model);
                     }
                     addressId = user.AddressID.Value;
@@ -92,6 +93,20 @@ namespace PlasticLicensingApp.Controllers
 
                 _context.Suppliers.Add(supplier);
                 await _context.SaveChangesAsync();
+
+                var status = await _context.Statuses.FirstOrDefaultAsync(s => s.StatusName == "New" && s.StatusType == "License");
+                if (status == null) throw new Exception("License status 'New' not found in database.");
+
+                var license = new License
+                {                    SupplierID = supplier.ID,
+                    StatusID = status.ID,
+                    CreatedBy = userId,
+                    CreatedDate = DateTime.Now
+                };
+
+                _context.Licenses.Add(license);
+                await _context.SaveChangesAsync();
+
                 await transaction.CommitAsync();
 
                 return RedirectToAction(nameof(Index));
@@ -116,9 +131,14 @@ namespace PlasticLicensingApp.Controllers
 
             if (supplier == null) return NotFound();
 
+            var licenseInfo = await _context.Licenses
+                .Include(l => l.Status)
+                .Where(l => l.SupplierID == id)
+                .Select(l => new { l.Status.StatusName, l.LicenseNumber })
+                .FirstOrDefaultAsync();
+
             var model = new SupplierEditViewModel
-            {
-                ID = supplier.ID,
+            {                ID = supplier.ID,
                 SupplierCompanyName = supplier.SupplierCompanyName,
                 Line1 = supplier.Address.Line1,
                 Line2 = supplier.Address.Line2,
@@ -126,7 +146,9 @@ namespace PlasticLicensingApp.Controllers
                 State = supplier.Address.State,
                 Pincode = supplier.Address.Pincode,
                 Country = supplier.Address.Country,
-                Phone = supplier.Address.Phone
+                Phone = supplier.Address.Phone,
+                LicenseStatus = licenseInfo?.StatusName,
+                LicenseNumber = licenseInfo?.StatusName == "Active" ? licenseInfo?.LicenseNumber : null
             };
 
             return View(model);
@@ -148,6 +170,7 @@ namespace PlasticLicensingApp.Controllers
 
             if (supplier == null) return NotFound();
 
+            // Enforce restriction: LicenseNumber and LicenseStatus are NOT in the model update path
             supplier.SupplierCompanyName = model.SupplierCompanyName;
             supplier.Address.Line1 = model.Line1;
             supplier.Address.Line2 = model.Line2;

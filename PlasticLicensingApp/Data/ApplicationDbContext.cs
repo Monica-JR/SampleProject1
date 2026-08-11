@@ -58,9 +58,21 @@ namespace PlasticLicensingApp.Data
                 ((AuditableEntity)entityEntry.Entity).LastChangedDate = DateTime.UtcNow;
 
                 if (entityEntry.State == EntityState.Added)
-                {
+                { 
                     ((AuditableEntity)entityEntry.Entity).CreatedDate = DateTime.UtcNow;
                 }
+            }
+
+            // Prevent manual changes to License fields
+            var licenseEntries = ChangeTracker.Entries<License>()
+                .Where(e => e.State == EntityState.Modified);
+            
+            foreach (var entry in licenseEntries)
+            {
+                entry.Property(x => x.LicenseNumber).IsModified = false;
+                // If user tried to change StatusID manually through API but it should be system-managed
+                // However, system processes might need to change it. 
+                // We rely on Controller/Service layer to enforce "Users must not be able to change".
             }
 
             return base.SaveChangesAsync(cancellationToken);
