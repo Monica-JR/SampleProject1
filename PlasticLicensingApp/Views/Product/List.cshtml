@@ -56,6 +56,7 @@
                                             "Approved" => "bg-success",
                                             "Rejected" or "Denied" => "bg-danger",
                                             "Submitted" => "bg-primary",
+                                            "New" => "bg-info",
                                             _ => "bg-secondary"
                                         };
                                         <span class="badge @statusClass">@item.Status.StatusName</span>
@@ -63,7 +64,14 @@
                                 </td>
                                 <td>@item.CreatedDate.ToString("dd MMM yyyy")</td>
                                 <td class="text-end pe-4">
-                                    <button class="btn btn-sm btn-outline-secondary rounded-pill">View Details</button>
+                                    @if (item.Status?.StatusName == "New")
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.ID" class="btn btn-sm btn-primary rounded-pill">Resume</a>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-secondary rounded-pill">View Details</button>
+                                    }
                                 </td>
                             </tr>
                         }

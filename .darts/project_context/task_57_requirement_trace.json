@@ -1,0 +1,156 @@
+{
+  "task_id": 57,
+  "task_name": "SampleProject1",
+  "execution_path": "planner_coder",
+  "complexity_tier": "medium",
+  "requirement_text": "Feature: Create Product\n\nImplement a Create Product workflow in the existing application.\n\nFirst: Analyze the Existing Codebase\n\nBefore coding, inspect and reuse the existing:\n1. Product model/table and CRUD functionality\n2. ProductParameter, Parameters, and Status entities/tables\n3. API/service/repository patterns\n4. UI components, routing, forms, validation, and error handling\n5. Authorization and database conventions\n\nDo not introduce a new architecture or duplicate existing functionality. Do not assume the database schema—use the existing implementation as the source of truth.\n\nWorkflow\nScreen 1 — Product Details\n1. Clicking Create Product opens the Product creation flow.\n2. Display fields based on the existing Product schema.\n3. Use existing form components and validation.\n4. On Save:\n - Create the Product.\n - Set its Status to \"New\", retrieving the status from the Status table (never hard-code the Status ID).\n - Persist the Product even if the user does not continue to Screen 2.\n5. The user must be able to leave and resume the Product later.\n\nScreen 2 — Product Parameters\n1. Load the parameter list from the existing Parameters lookup table.\n2. Display an appropriate input for each parameter.\n3. Save the entered values in ProductParameter, associated with the correct Product and Parameter.\n4. Reuse existing parameter validation/business rules.\n\nStatus Lifecycle\nCreate Product\n      ↓\nStatus = New\n      ↓\nUser can leave and resume\n      ↓\nEnter Product Parameters\n      ↓\nSuccessfully save/complete parameters\n      ↓\nStatus = Submitted\n\nBoth \"New\" and \"Submitted\" must be retrieved from the Status table, not hard-coded IDs.\n\nThe Product must only move to Submitted after the required parameter data has been successfully persisted.\n\nImportant Requirements\n1. Prevent duplicate Products or ProductParameter records.\n2. Existing ProductParameter records should be updated rather than duplicated where appropriate.\n3. Follow existing authentication/authorization rules.\n4. Follow existing UI/UX and API patterns.\n5. Do not create new tables if the required tables already exist.\n6. Add/update appropriate automated tests.\n7. Handle save failures without incorrectly changing the Product status.\n8. Do not break existing Product functionality.\n\nBefore Coding\nFirst provide:\n1. Relevant existing files/components/services discovered.\n2. A concise implementation plan.\n3. Any genuine ambiguities that cannot be determined from the codebase.\n\nThen implement the feature and provide a concise summary of changes and tests.",
+  "generated_at": "2026-08-11T14:03:41.688Z",
+  "requirements": [
+    {
+      "req_id": "R-001",
+      "text": "Implement a two-screen Product creation workflow within the existing application architecture.",
+      "status": "covered",
+      "covered_by": [
+        "T-002"
+      ]
+    },
+    {
+      "req_id": "R-002",
+      "text": "Create a Product record with a 'New' status on the first screen and persist it even if the user exits.",
+      "status": "covered",
+      "covered_by": [
+        "T-001"
+      ]
+    },
+    {
+      "req_id": "R-003",
+      "text": "Retrieve status IDs for 'New' and 'Submitted' from the existing database table rather than using hard-coded values.",
+      "status": "covered",
+      "covered_by": [
+        "T-001"
+      ]
+    },
+    {
+      "req_id": "R-004",
+      "text": "Allow users to leave and resume the Product creation process at a later time.",
+      "status": "covered",
+      "covered_by": [
+        "T-001",
+        "T-002"
+      ]
+    },
+    {
+      "req_id": "R-005",
+      "text": "Load and display dynamic input fields for product parameters based on the existing lookup table.",
+      "status": "covered",
+      "covered_by": [
+        "T-002"
+      ]
+    },
+    {
+      "req_id": "R-006",
+      "text": "Save or update product parameter values in the designated table while preventing duplicate records.",
+      "status": "covered",
+      "covered_by": [
+        "T-001"
+      ]
+    },
+    {
+      "req_id": "R-007",
+      "text": "Update the Product status to 'Submitted' only after required parameter data is successfully persisted.",
+      "status": "covered",
+      "covered_by": [
+        "T-001"
+      ]
+    },
+    {
+      "req_id": "R-008",
+      "text": "Ensure the implementation reuses existing models, services, components, and validation rules.",
+      "status": "covered",
+      "covered_by": [
+        "T-001",
+        "T-002"
+      ]
+    },
+    {
+      "req_id": "R-009",
+      "text": "Handle save failures gracefully without incorrectly transitioning the product status.",
+      "status": "covered",
+      "covered_by": [
+        "T-001"
+      ]
+    },
+    {
+      "req_id": "R-010",
+      "text": "Adhere to existing authorization, authentication, and database naming conventions.",
+      "status": "covered",
+      "covered_by": [
+        "T-001"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "T-001",
+      "name": "Backend — Update ProductController with two-step logic",
+      "status": "completed",
+      "req_refs": [
+        "R-002",
+        "R-003",
+        "R-004",
+        "R-006",
+        "R-007",
+        "R-008",
+        "R-009",
+        "R-010"
+      ],
+      "files_written": [
+        "PlasticLicensingApp/Controllers/ProductController.cs",
+        "PlasticLicensingApp/ViewModels/ProductSubmissionViewModel.cs",
+        "PlasticLicensingApp/Views/Product/Create.cshtml",
+        "PlasticLicensingApp/Views/Product/List.cshtml"
+      ],
+      "module": "PlannerCoder",
+      "feature": "Feature: Create Product\n\nImplement a Create Product workf...",
+      "validation": {
+        "compiled": true,
+        "spec_alignment": "unchecked"
+      }
+    },
+    {
+      "task_id": "T-002",
+      "name": "Frontend UI — Two-screen product creation wizard",
+      "status": "completed",
+      "req_refs": [
+        "R-001",
+        "R-004",
+        "R-005",
+        "R-008"
+      ],
+      "files_written": [
+        "PlasticLicensingApp/Controllers/ProductController.cs",
+        "PlasticLicensingApp/ViewModels/ProductSubmissionViewModel.cs",
+        "PlasticLicensingApp/Views/Product/Create.cshtml",
+        "PlasticLicensingApp/Views/Product/List.cshtml"
+      ],
+      "module": "PlannerCoder",
+      "feature": "Feature: Create Product\n\nImplement a Create Product workf...",
+      "validation": {
+        "compiled": true,
+        "spec_alignment": "unchecked"
+      }
+    }
+  ],
+  "coverage_summary": {
+    "total_requirements": 10,
+    "covered": 10,
+    "partial": 0,
+    "uncovered": 0,
+    "coverage_pct": 100,
+    "total_tasks": 2,
+    "tasks_completed": 2,
+    "tasks_failed": 0,
+    "files_written": 4,
+    "validation_status": "passed"
+  }
+}

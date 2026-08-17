@@ -1,6 +1,6 @@
 @model PlasticLicensingApp.ViewModels.ProductSubmissionViewModel
 @{
-    ViewData["Title"] = "Submit New Product";
+    ViewData["Title"] = Model.ProductID.HasValue ? "Resume Product Submission" : "Submit New Product";
 }
 
 <div class="container mt-5">
@@ -8,31 +8,52 @@
         <div class="col-md-8">
             <div class="card shadow border-0">
                 <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0"><i class="fas fa-box-open me-2"></i>Submit New Product</h3>
+                    <h3 class="mb-0"><i class="fas fa-box-open me-2"></i>@ViewData["Title"]</h3>
                     <a asp-action="List" asp-route-supplierId="@Model.SupplierID" class="btn btn-sm btn-light rounded-pill">Cancel</a>
                 </div>
                 <div class="card-body p-4">
-                    <div id="submissionForm">
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Product Name</label>
-                            <input type="text" class="form-control form-control-lg" data-bind="value: productName, valueUpdate: 'afterkeydown'" placeholder="e.g. Recycled PET Container" />
+                    <div id="productWizard">
+                        <!-- Progress Bar -->
+                        <div class="progress mb-4" style="height: 10px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 data-bind="style: { width: step() === 1 ? '50%' : '100%' }"></div>
                         </div>
 
-                        <hr />
-                        <h5 class="mb-3 text-secondary">Technical Parameters</h5>
-                        
-                        <div class="row g-3" data-bind="foreach: parameters">
-                            <div class="col-md-6">
-                                <label class="form-label" data-bind="text: parameterName"></label>
-                                <input type="text" class="form-control" data-bind="value: value" placeholder="Enter value..." />
+                        <!-- Screen 1: Product Details -->
+                        <div data-bind="visible: step() === 1">
+                            <h5 class="mb-3"><span class="badge bg-success me-2">1</span>Product Details</h5>
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Product Name</label>
+                                <input type="text" class="form-control form-control-lg" data-bind="value: productName, enable: !productId()" placeholder="e.g. Recycled PET Container" />
+                            </div>
+
+                            <div class="mt-4 d-grid">
+                                <button class="btn btn-success btn-lg py-3 fw-bold" data-bind="click: saveProduct, disable: isSaving() || !productName()">
+                                    <span class="spinner-border spinner-border-sm me-2" data-bind="visible: isSaving"></span>
+                                    <span data-bind="text: productId() ? 'Continue to Parameters' : 'Save & Continue'"></span>
+                                </button>
                             </div>
                         </div>
 
-                        <div class="mt-4 d-grid">
-                            <button class="btn btn-success btn-lg py-3 fw-bold" data-bind="click: submitProduct, disable: isSubmitting() || !productName()">
-                                <span class="spinner-border spinner-border-sm me-2" data-bind="visible: isSubmitting"></span>
-                                <span data-bind="text: isSubmitting() ? 'Submitting...' : 'Submit Product for Certification'"></span>
-                            </button>
+                        <!-- Screen 2: Product Parameters -->
+                        <div data-bind="visible: step() === 2">
+                            <h5 class="mb-3"><span class="badge bg-success me-2">2</span>Technical Parameters</h5>
+                            <p class="text-muted">Enter values for the following parameters to complete your submission.</p>
+                            
+                            <div class="row g-3" data-bind="foreach: parameters">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold" data-bind="text: ParameterName"></label>
+                                    <input type="text" class="form-control" data-bind="value: Value" placeholder="Enter value..." />
+                                </div>
+                            </div>
+
+                            <div class="mt-4 d-flex gap-2">
+                                <button class="btn btn-outline-secondary btn-lg flex-grow-1" data-bind="click: prevStep">Back</button>
+                                <button class="btn btn-success btn-lg flex-grow-1 py-3 fw-bold" data-bind="click: submitParameters, disable: isSaving">
+                                    <span class="spinner-border spinner-border-sm me-2" data-bind="visible: isSaving"></span>
+                                    Submit Product
+                                </button>
+                            </div>
                         </div>
 
                         <div class="alert alert-danger mt-3" data-bind="visible: errorMessage, text: errorMessage"></div>
@@ -47,57 +68,110 @@
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.js"></script>
     <script>
-        function ProductViewModel() {
+        function ProductWizardViewModel() {
             var self = this;
+            self.step = ko.observable(@(Model.ProductID.HasValue ? 2 : 1));
+            self.productId = ko.observable(@(Model.ProductID.HasValue ? Model.ProductID.Value : "null"));
             self.supplierId = @Model.SupplierID;
-            self.productName = ko.observable('');
-            self.isSubmitting = ko.observable(false);
+            self.productName = ko.observable('@Html.Raw(Model.ProductName ?? "")');
+            self.isSaving = ko.observable(false);
             self.errorMessage = ko.observable('');
             self.successMessage = ko.observable('');
 
-            self.parameters = ko.observableArray(@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Parameters)));
+            self.parameters = ko.observableArray(@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Parameters ?? new List<PlasticLicensingApp.ViewModels.ParameterValueViewModel>())));
 
-            self.submitProduct = function() {
-                if (!self.productName()) {
-                    self.errorMessage("Product Name is required.");
+            // If we don't have parameters yet (Screen 1 for new product), load them from lookup
+            if (self.parameters().length === 0) {
+                fetch('/Product/GetParameters')
+                    .then(res => res.json())
+                    .then(data => {
+                        var mapped = data.map(p => ({ 
+                            ParameterID: p.id || p.ID || p.Id, 
+                            ParameterName: p.parameterName || p.ParameterName, 
+                            Value: '' 
+                        }));
+                        self.parameters(mapped);
+                    });
+            } else {
+                // Ensure observable values if needed, although simple objects usually suffice for toJS
+                var currentParams = self.parameters();
+                var mapped = currentParams.map(p => ({
+                    ParameterID: p.ParameterID,
+                    ParameterName: p.ParameterName,
+                    Value: ko.observable(p.Value || '')
+                }));
+                self.parameters(mapped);
+            }
+
+            self.saveProduct = function() {
+                if (self.productId()) {
+                    self.step(2);
                     return;
                 }
 
-                self.isSubmitting(true);
+                self.isSaving(true);
                 self.errorMessage('');
-                self.successMessage('');
-
-                var data = {
-                    supplierId: self.supplierId,
-                    productName: self.productName(),
-                    parameters: ko.toJS(self.parameters)
-                };
 
                 fetch('/Product/Create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify({
+                        SupplierID: self.supplierId,
+                        ProductName: self.productName()
+                    })
                 })
-                .then(response => {
-                    if (!response.ok) throw new Error("Submission failed");
-                    return response.json();
-                })
-                .then(result => {
-                    if (result.success) {
-                        self.successMessage(result.message);
-                        // Redirect to product list so it appears immediately
-                        setTimeout(function() { window.location.href = '/Product/List?supplierId=' + self.supplierId; }, 1500);
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        self.productId(data.productId);
+                        self.step(2);
                     } else {
-                        self.errorMessage(result.message || "An error occurred during submission.");
+                        self.errorMessage(data.message || "Failed to create product.");
                     }
                 })
-                .catch(err => {
-                    self.errorMessage("Server error. Please try again.");
+                .catch(() => self.errorMessage("Server error."))
+                .finally(() => self.isSaving(false));
+            };
+
+            self.submitParameters = function() {
+                self.isSaving(true);
+                self.errorMessage('');
+                self.successMessage('');
+
+                var paramsToSave = ko.toJS(self.parameters).map(p => ({
+                    ParameterID: p.ParameterID,
+                    ParameterName: p.ParameterName,
+                    Value: p.Value
+                }));
+
+                fetch('/Product/SaveParameters', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ProductID: self.productId(),
+                        SupplierID: self.supplierId,
+                        ProductName: self.productName(),
+                        Parameters: paramsToSave
+                    })
                 })
-                .finally(() => self.isSubmitting(false));
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        self.successMessage(data.message);
+                        setTimeout(function() { window.location.href = '/Product/List?supplierId=' + self.supplierId; }, 1500);
+                    } else {
+                        self.errorMessage(data.message || "Failed to save parameters.");
+                    }
+                })
+                .catch(() => self.errorMessage("Server error."))
+                .finally(() => self.isSaving(false));
+            };
+
+            self.prevStep = function() {
+                self.step(1);
             };
         }
 
-        ko.applyBindings(new ProductViewModel(), document.getElementById('submissionForm'));
+        ko.applyBindings(new ProductWizardViewModel(), document.getElementById('productWizard'));
     </script>
 }

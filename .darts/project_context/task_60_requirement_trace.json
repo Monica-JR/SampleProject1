@@ -1,0 +1,126 @@
+{
+  "task_id": 60,
+  "task_name": "SampleProject1",
+  "execution_path": "planner_coder",
+  "complexity_tier": "simple",
+  "requirement_text": "Make the required changes without affecting any existing functionality or product-status behavior.\n\nRequirement\n1. Product table stores product details.\n2. Parameters table stores the master list of plastic parameters.\n3. ProductParameters stores parameter values for each product, with at minimum:\n  - ProductId (FK)\n  - ParameterId (FK to Parameters)\n  - Value\n\nCurrent Flow\n1. Clicking Create Product opens the first page, which captures only the Product Name.\n2. The second page should load the complete parameter list from Parameters as labels.\n3. The user enters a value for each parameter.\n4. Save these values into ProductParameters against the newly created product using the corresponding ParameterId.\n\nIssue:\nThe second-page parameter loading and/or saving to ProductParameters is currently not working correctly.\n\nTask:\nTrace the existing Create Product flow end-to-end and fix the issue with the minimum necessary changes. \nEnsure that:\n1. All active/relevant parameters are loaded from Parameters.\n2. Each parameter value is correctly associated with the newly created ProductId.\n3. ParameterId is correctly stored as the FK.\n4. Values are persisted correctly in ProductParameters.\n5. Existing create/edit functionality and validation continue to work.\n6. Do not modify or reset any existing Product Status values or status-related logic.\n7. Follow the project's existing architecture, patterns, naming conventions, and database practices.\n8. Do not introduce unnecessary schema or architectural changes.\n\nBefore making changes, identify the root cause and verify the complete data flow from UI → API/service → database.",
+  "generated_at": "2026-08-17T07:02:52.505Z",
+  "requirements": [
+    {
+      "req_id": "R-001",
+      "text": "The system must load the complete master list of active/relevant parameters from the Parameters table onto the second product creation page.",
+      "status": "covered",
+      "covered_by": [
+        "T-002"
+      ]
+    },
+    {
+      "req_id": "R-002",
+      "text": "The system must capture and store parameter values in the ProductParameters table associated with the newly created product.",
+      "status": "covered",
+      "covered_by": [
+        "T-001",
+        "T-002"
+      ]
+    },
+    {
+      "req_id": "R-003",
+      "text": "The system must ensure ProductId is correctly stored as the specified location identifier.",
+      "status": "covered",
+      "covered_by": [
+        "T-001"
+      ]
+    },
+    {
+      "req_id": "R-004",
+      "text": "The implementation must maintain existing product-status behavior and logic without modification.",
+      "status": "uncovered",
+      "covered_by": [
+        "T-0"
+      ]
+    },
+    {
+      "req_id": "R-005",
+      "text": "The solution must resolve data flow issues between the frontend service and backend database using existing architectural patterns.",
+      "status": "partial",
+      "covered_by": [
+        "T-001",
+        "T-002",
+        "T-0"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "T-001",
+      "name": "Backend Fixes — Correct ClaimType typo in SaveParameters",
+      "status": "completed",
+      "req_refs": [
+        "R-002",
+        "R-003",
+        "R-005"
+      ],
+      "files_written": [
+        "PlasticLicensingApp/Controllers/ProductController.cs",
+        "PlasticLicensingApp/Views/Product/Create.cshtml"
+      ],
+      "module": "PlannerCoder",
+      "feature": "Make the required changes without affecting any existing ...",
+      "validation": {
+        "compiled": true,
+        "spec_alignment": "unchecked"
+      }
+    },
+    {
+      "task_id": "T-002",
+      "name": "Frontend Fixes — Fix property name case sensitivity in JS fetch",
+      "status": "completed",
+      "req_refs": [
+        "R-001",
+        "R-002",
+        "R-005"
+      ],
+      "files_written": [
+        "PlasticLicensingApp/Controllers/ProductController.cs",
+        "PlasticLicensingApp/Views/Product/Create.cshtml"
+      ],
+      "module": "PlannerCoder",
+      "feature": "Make the required changes without affecting any existing ...",
+      "validation": {
+        "compiled": true,
+        "spec_alignment": "unchecked"
+      }
+    },
+    {
+      "task_id": "T-0",
+      "name": "Analysing and planning implementation...",
+      "status": "pending",
+      "req_refs": [
+        "R-004",
+        "R-005"
+      ],
+      "files_written": [
+        "PlasticLicensingApp/Controllers/ProductController.cs",
+        "PlasticLicensingApp/Views/Product/Create.cshtml"
+      ],
+      "module": "PlannerCoder",
+      "feature": "Make the required changes without affecting any existing functionality or produc",
+      "validation": {
+        "compiled": true,
+        "spec_alignment": "unchecked"
+      }
+    }
+  ],
+  "coverage_summary": {
+    "total_requirements": 5,
+    "covered": 3,
+    "partial": 1,
+    "uncovered": 1,
+    "coverage_pct": 70,
+    "total_tasks": 3,
+    "tasks_completed": 2,
+    "tasks_failed": 0,
+    "files_written": 2,
+    "validation_status": "passed"
+  }
+}
