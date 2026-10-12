@@ -1,12 +1,10 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Mvc;
 
 namespace PlasticLicensingApp.ViewModels
 {
     public class SupplierRegistrationViewModel
     {
         [Required(ErrorMessage = "Company Name is required")]
-        [BindProperty(Name = "supplierCompanyName")]
         public string SupplierCompanyName { get; set; }
 
         public bool UseProfileAddress { get; set; }

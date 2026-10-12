@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="PlasticLicensingApp/PlasticLicensingApp.csproj" />
+  <Project Path="PlasticLicensingApp.Model/PlasticLicensingApp.Model.csproj" />
+  <Project Path="PlasticLicensingApp.Data/PlasticLicensingApp.Data.csproj" />
+  <Project Path="PlasticLicensingApp.Services/PlasticLicensingApp.Services.csproj" />
 </Solution>

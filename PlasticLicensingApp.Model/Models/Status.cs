@@ -2,9 +2,10 @@ using PlasticLicensingApp.Models.Base;
 
 namespace PlasticLicensingApp.Models
 {
-    public class Parameter : AuditableEntity
+    public class Status : AuditableEntity
     {
-        public string ParameterName { get; set; }
+        public string StatusName { get; set; }
+        public string StatusType { get; set; }
         public bool IsActive { get; set; } = true;
     }
 }

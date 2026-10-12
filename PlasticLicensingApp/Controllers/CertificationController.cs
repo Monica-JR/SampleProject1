@@ -1,17 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PlasticLicensingApp.Data;
 using PlasticLicensingApp.Models;
+using PlasticLicensingApp.Services.Product;
 
 namespace PlasticLicensingApp.Controllers
 {
     public class CertificationController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProductService _productService;
 
-        public CertificationController(ApplicationDbContext context)
+        public CertificationController(IProductService productService)
         {
-            _context = context;
+            _productService = productService;
         }
 
         public IActionResult Index()
@@ -22,10 +21,7 @@ namespace PlasticLicensingApp.Controllers
         [HttpGet]
         public async Task<JsonResult> GetProducts()
         {
-            var products = await _context.Products
-                .Include(p => p.Supplier)
-                .Include(p => p.Status)
-                .ToListAsync();
+            var products = await _productService.GetAllProductsAsync();
             return Json(products);
         }
 
@@ -34,10 +30,8 @@ namespace PlasticLicensingApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                product.StatusID = 1; // Default to Pending
-                _context.Products.Add(product);
-                await _context.SaveChangesAsync();
-                return Ok(product);
+                var createdProduct = await _productService.CreateProductAsync(product);
+                return Ok(createdProduct);
             }
             return BadRequest(ModelState);
         }

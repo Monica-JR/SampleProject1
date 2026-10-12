@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PlasticLicensingApp.Data;
-using PlasticLicensingApp.Models;
+using PlasticLicensingApp.Services.Supplier;
 using PlasticLicensingApp.ViewModels;
 using System.Security.Claims;
 
@@ -11,11 +9,11 @@ namespace PlasticLicensingApp.Controllers
     [Authorize]
     public class SupplierController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ISupplierService _supplierService;
 
-        public SupplierController(ApplicationDbContext context)
+        public SupplierController(ISupplierService supplierService)
         {
-            _context = context;
+            _supplierService = supplierService;
         }
 
         public async Task<IActionResult> Index()
@@ -23,17 +21,7 @@ namespace PlasticLicensingApp.Controllers
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
 
-            var suppliers = await _context.Suppliers
-                .Include(s => s.Address)
-                .Where(s => s.CreatedBy == userId)
-                .Select(s => new SupplierDashboardViewModel
-                {
-                    ID = s.ID,
-                    CompanyName = s.SupplierCompanyName,
-                    City = s.Address.City,
-                    State = s.Address.State,
-                    CreatedDate = s.CreatedDate
-                }).ToListAsync();
+            var suppliers = await _supplierService.GetSuppliersForUserAsync(userId);
 
             return View(suppliers);
         }
@@ -50,61 +38,14 @@ namespace PlasticLicensingApp.Controllers
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
+            var (success, errorMessage) = await _supplierService.RegisterSupplierCompanyAsync(model, userId);
+            if (!success)
             {
-                int addressId;
-                if (model.UseProfileAddress)
-                {
-                    var user = await _context.Users.FindAsync(userId);
-                    if (user == null) return BadRequest("User not found");
-                    
-                    if (user.AddressID == null) 
-                    {
-                        ModelState.AddModelError("", "No profile address found. Please enter a new address.");
-                        return View(model);
-                    }
-                    addressId = user.AddressID.Value;
-                }
-                else
-                {
-                    var address = new Address
-                    {
-                        Line1 = model.Line1 ?? "",
-                        Line2 = model.Line2,
-                        City = model.City ?? "",
-                        State = model.State ?? "",
-                        Pincode = model.Pincode ?? "",
-                        Country = model.Country ?? "",
-                        Phone = model.Phone ?? "",
-                        CreatedBy = userId,
-                        CreatedDate = DateTime.Now
-                    };
-                    _context.Addresses.Add(address);
-                    await _context.SaveChangesAsync();
-                    addressId = address.ID;
-                }
-
-                var supplier = new Supplier
-                {
-                    SupplierCompanyName = model.SupplierCompanyName,
-                    AddressID = addressId,
-                    CreatedBy = userId,
-                    CreatedDate = DateTime.Now
-                };
-
-                _context.Suppliers.Add(supplier);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-                ModelState.AddModelError("", "An error occurred while saving. Please try again.");
+                ModelState.AddModelError("", errorMessage ?? "An error occurred while saving. Please try again.");
                 return View(model);
             }
+
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
@@ -113,18 +54,18 @@ namespace PlasticLicensingApp.Controllers
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
 
-            var user = await _context.Users.Include(u => u.Address).FirstOrDefaultAsync(u => u.ID == userId);
-            if (user?.Address == null) return NotFound();
+            var address = await _supplierService.GetUserProfileAddressAsync(userId);
+            if (address == null) return NotFound();
 
             return Json(new
             {
-                line1 = user.Address.Line1,
-                line2 = user.Address.Line2,
-                city = user.Address.City,
-                state = user.Address.State,
-                pincode = user.Address.Pincode,
-                country = user.Address.Country,
-                phone = user.Address.Phone
+                line1 = address.Line1,
+                line2 = address.Line2,
+                city = address.City,
+                state = address.State,
+                pincode = address.Pincode,
+                country = address.Country,
+                phone = address.Phone
             });
         }
     }
