@@ -62,7 +62,7 @@ namespace PlasticLicensingApp.Services.Supplier
                         Country = model.Country ?? "",
                         Phone = model.Phone ?? "",
                         CreatedBy = userId,
-                        CreatedDate = DateTime.Now
+                        CreatedDate = DateTime.UtcNow
                     };
                     _context.Addresses.Add(address);
                     await _context.SaveChangesAsync();
@@ -74,7 +74,7 @@ namespace PlasticLicensingApp.Services.Supplier
                     SupplierCompanyName = model.SupplierCompanyName,
                     AddressID = addressId,
                     CreatedBy = userId,
-                    CreatedDate = DateTime.Now
+                    CreatedDate = DateTime.UtcNow
                 };
 
                 _context.Suppliers.Add(supplier);
@@ -94,6 +94,92 @@ namespace PlasticLicensingApp.Services.Supplier
         {
             var user = await _context.Users.Include(u => u.Address).FirstOrDefaultAsync(u => u.ID == userId);
             return user?.Address;
+        }
+
+        public async Task<EditSupplierProfileViewModel?> GetSupplierForEditAsync(int supplierId, int userId)
+        {
+            var supplier = await _context.Suppliers
+                .Include(s => s.Address)
+                .FirstOrDefaultAsync(s => s.ID == supplierId && s.CreatedBy == userId);
+
+            if (supplier == null)
+            {
+                return null;
+            }
+
+            return new EditSupplierProfileViewModel
+            {
+                ID = supplier.ID,
+                SupplierCompanyName = supplier.SupplierCompanyName ?? string.Empty,
+                Line1 = supplier.Address?.Line1 ?? string.Empty,
+                Line2 = supplier.Address?.Line2,
+                City = supplier.Address?.City ?? string.Empty,
+                State = supplier.Address?.State ?? string.Empty,
+                Pincode = supplier.Address?.Pincode ?? string.Empty,
+                Country = supplier.Address?.Country ?? string.Empty,
+                Phone = supplier.Address?.Phone ?? string.Empty
+            };
+        }
+
+        public async Task<(bool Success, string? ErrorMessage)> UpdateSupplierCompanyAsync(EditSupplierProfileViewModel model, int userId)
+        {
+            var supplier = await _context.Suppliers
+                .Include(s => s.Address)
+                .FirstOrDefaultAsync(s => s.ID == model.ID && s.CreatedBy == userId);
+
+            if (supplier == null)
+            {
+                return (false, "Supplier company not found or you are not authorized to edit it.");
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                supplier.SupplierCompanyName = model.SupplierCompanyName;
+                supplier.LastChangedBy = userId;
+                supplier.LastChangedDate = DateTime.UtcNow;
+
+                if (supplier.Address != null)
+                {
+                    supplier.Address.Line1 = model.Line1 ?? string.Empty;
+                    supplier.Address.Line2 = model.Line2;
+                    supplier.Address.City = model.City ?? string.Empty;
+                    supplier.Address.State = model.State ?? string.Empty;
+                    supplier.Address.Pincode = model.Pincode ?? string.Empty;
+                    supplier.Address.Country = model.Country ?? string.Empty;
+                    supplier.Address.Phone = model.Phone ?? string.Empty;
+                    supplier.Address.LastChangedBy = userId;
+                    supplier.Address.LastChangedDate = DateTime.UtcNow;
+                }
+                else
+                {
+                    var newAddress = new Address
+                    {
+                        Line1 = model.Line1 ?? string.Empty,
+                        Line2 = model.Line2,
+                        City = model.City ?? string.Empty,
+                        State = model.State ?? string.Empty,
+                        Pincode = model.Pincode ?? string.Empty,
+                        Country = model.Country ?? string.Empty,
+                        Phone = model.Phone ?? string.Empty,
+                        CreatedBy = userId,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                    _context.Addresses.Add(newAddress);
+                    await _context.SaveChangesAsync();
+                    supplier.AddressID = newAddress.ID;
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return (true, null);
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                return (false, "An error occurred while saving the supplier profile. Please try again.");
+            }
         }
     }
 }

@@ -49,6 +49,44 @@ namespace PlasticLicensingApp.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> EditProfile(int id)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var model = await _supplierService.GetSupplierForEditAsync(id, userId);
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditProfile([FromForm] EditSupplierProfileViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var (success, errorMessage) = await _supplierService.UpdateSupplierCompanyAsync(model, userId);
+            if (!success)
+            {
+                ModelState.AddModelError("", errorMessage ?? "An error occurred while updating the profile. Please try again.");
+                return View(model);
+            }
+
+            TempData["SuccessMessage"] = "Supplier company profile updated successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
         public async Task<IActionResult> GetProfileAddress()
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);

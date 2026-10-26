@@ -30,7 +30,8 @@ namespace PlasticLicensingApp.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
 
             await _productService.SubmitProductAsync(model, userId);
 
