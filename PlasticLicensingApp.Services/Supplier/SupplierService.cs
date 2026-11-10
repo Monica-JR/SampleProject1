@@ -20,17 +20,37 @@ namespace PlasticLicensingApp.Services.Supplier
 
         public async Task<List<SupplierDashboardViewModel>> GetSuppliersForUserAsync(int userId)
         {
-            return await _context.Suppliers
+            var suppliers = await _context.Suppliers
                 .Include(s => s.Address)
                 .Where(s => s.CreatedBy == userId)
-                .Select(s => new SupplierDashboardViewModel
+                .ToListAsync();
+
+            var supplierIds = suppliers.Select(s => s.ID).ToList();
+
+            var licenses = await _context.Licenses
+                .Include(l => l.Status)
+                .Where(l => supplierIds.Contains(l.SupplierID))
+                .ToListAsync();
+
+            return suppliers.Select(s =>
+            {
+                var license = licenses.FirstOrDefault(l => l.SupplierID == s.ID);
+                var licenseStatus = license?.Status?.StatusName ?? "New";
+                var licenseNumber = license != null
+                    ? (!string.IsNullOrWhiteSpace(license.LicenseNumber) ? license.LicenseNumber : license.ID.ToString("D4"))
+                    : string.Empty;
+
+                return new SupplierDashboardViewModel
                 {
                     ID = s.ID,
                     CompanyName = s.SupplierCompanyName ?? string.Empty,
                     City = s.Address != null && s.Address.City != null ? s.Address.City : string.Empty,
                     State = s.Address != null && s.Address.State != null ? s.Address.State : string.Empty,
-                    CreatedDate = s.CreatedDate
-                }).ToListAsync();
+                    CreatedDate = s.CreatedDate,
+                    LicenseStatus = licenseStatus,
+                    RawLicenseNumber = licenseNumber
+                };
+            }).ToList();
         }
 
         public async Task<(bool Success, string? ErrorMessage)> RegisterSupplierCompanyAsync(SupplierRegistrationViewModel model, int userId)
@@ -79,14 +99,50 @@ namespace PlasticLicensingApp.Services.Supplier
 
                 _context.Suppliers.Add(supplier);
                 await _context.SaveChangesAsync();
+
+                // 2. Set the License Status to “New” using the matching record from the existing Status table. Do not hardcode the Status ID.
+                var newStatus = await _context.Statuses
+                    .FirstOrDefaultAsync(s => s.StatusType == "License" && s.StatusName == "New");
+
+                if (newStatus == null)
+                {
+                    newStatus = await _context.Statuses
+                        .FirstOrDefaultAsync(s => s.StatusName == "New");
+                }
+
+                if (newStatus == null)
+                {
+                    throw new InvalidOperationException("License Status 'New' not found in database.");
+                }
+
+                // 1. Automatically create a corresponding License record.
+                // 4. Associate the License with the newly created Supplier Company using the existing database relationship.
+                var license = new Models.License
+                {
+                    SupplierID = supplier.ID,
+                    StatusID = newStatus.ID,
+                    CreatedBy = userId,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                _context.Licenses.Add(license);
+                await _context.SaveChangesAsync();
+
+                // 3. Generate the License Number from the License ID using 4-digit zero padding: 1 -> 0001, 25 -> 0025, 123 -> 0123
+                if (string.IsNullOrWhiteSpace(license.LicenseNumber))
+                {
+                    license.LicenseNumber = license.ID.ToString("D4");
+                    await _context.SaveChangesAsync();
+                }
+
                 await transaction.CommitAsync();
 
                 return (true, null);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return (false, "An error occurred while saving. Please try again.");
+                return (false, $"An error occurred while saving: {ex.Message}");
             }
         }
 
@@ -107,6 +163,15 @@ namespace PlasticLicensingApp.Services.Supplier
                 return null;
             }
 
+            var license = await _context.Licenses
+                .Include(l => l.Status)
+                .FirstOrDefaultAsync(l => l.SupplierID == supplier.ID);
+
+            var licenseStatus = license?.Status?.StatusName ?? "New";
+            var licenseNumber = license != null
+                ? (!string.IsNullOrWhiteSpace(license.LicenseNumber) ? license.LicenseNumber : license.ID.ToString("D4"))
+                : string.Empty;
+
             return new EditSupplierProfileViewModel
             {
                 ID = supplier.ID,
@@ -117,7 +182,9 @@ namespace PlasticLicensingApp.Services.Supplier
                 State = supplier.Address?.State ?? string.Empty,
                 Pincode = supplier.Address?.Pincode ?? string.Empty,
                 Country = supplier.Address?.Country ?? string.Empty,
-                Phone = supplier.Address?.Phone ?? string.Empty
+                Phone = supplier.Address?.Phone ?? string.Empty,
+                LicenseStatus = licenseStatus,
+                RawLicenseNumber = licenseNumber
             };
         }
 

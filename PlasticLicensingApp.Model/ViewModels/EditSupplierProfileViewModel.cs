@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace PlasticLicensingApp.ViewModels
@@ -36,5 +37,15 @@ namespace PlasticLicensingApp.ViewModels
         [Required(ErrorMessage = "Phone number is required")]
         [Display(Name = "Phone Number")]
         public string Phone { get; set; } = string.Empty;
+
+        [Display(Name = "License Status")]
+        public string? LicenseStatus { get; set; }
+
+        public string? RawLicenseNumber { get; set; }
+
+        public bool IsLicenseActive => string.Equals(LicenseStatus, "Active", StringComparison.OrdinalIgnoreCase);
+
+        [Display(Name = "License Number")]
+        public string DisplayLicenseNumber => IsLicenseActive && !string.IsNullOrWhiteSpace(RawLicenseNumber) ? RawLicenseNumber : string.Empty;
     }
 }

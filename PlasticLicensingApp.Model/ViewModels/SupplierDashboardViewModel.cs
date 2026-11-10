@@ -9,5 +9,9 @@ namespace PlasticLicensingApp.ViewModels
         public string City { get; set; }
         public string State { get; set; }
         public DateTime CreatedDate { get; set; }
+        public string? LicenseStatus { get; set; }
+        public string? RawLicenseNumber { get; set; }
+        public bool IsLicenseActive => string.Equals(LicenseStatus, "Active", StringComparison.OrdinalIgnoreCase);
+        public string DisplayLicenseNumber => IsLicenseActive && !string.IsNullOrWhiteSpace(RawLicenseNumber) ? RawLicenseNumber : string.Empty;
     }
 }

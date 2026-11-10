@@ -37,14 +37,40 @@
             {
                 <div class="col">
                     <div class="card h-100 shadow-sm border-0 hover-card transition">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-3">
-                                <h5 class="card-title fw-bold text-dark">@item.CompanyName</h5>
-                                <span class="badge bg-light text-success border border-success">Active</span>
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title fw-bold text-dark mb-0">@item.CompanyName</h5>
+                                @if (item.IsLicenseActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else if (string.Equals(item.LicenseStatus, "New", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <span class="badge bg-info text-dark">New</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@(item.LicenseStatus ?? "Pending")</span>
+                                }
                             </div>
+
                             <p class="card-text text-muted mb-1"><i class="fas fa-map-marker-alt me-2"></i>@item.City, @item.State</p>
-                            <p class="card-text text-muted mb-4"><i class="fas fa-calendar-alt me-2"></i>Since @item.CreatedDate.ToString("MMM yyyy")</p>
-                            
+                            <p class="card-text text-muted mb-2"><i class="fas fa-calendar-alt me-2"></i>Since @item.CreatedDate.ToString("MMM yyyy")</p>
+
+                            <div class="border-top pt-2 mb-3 mt-1">
+                                <div class="d-flex justify-content-between align-items-center small">
+                                    <span class="text-muted"><i class="fas fa-id-card me-1"></i>License No:</span>
+                                    @if (item.IsLicenseActive)
+                                    {
+                                        <span class="fw-bold text-success font-monospace">@item.DisplayLicenseNumber</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted fst-italic">Not Available</span>
+                                    }
+                                </div>
+                            </div>
+
                             <div class="d-flex gap-2 mt-auto">
                                 <a asp-controller="Product" asp-action="Index" asp-route-supplierId="@item.ID" class="btn btn-outline-success flex-fill rounded-pill btn-sm">
                                     <i class="fas fa-boxes me-1"></i>View Products

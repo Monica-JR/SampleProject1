@@ -14,6 +14,37 @@
                     </a>
                 </div>
                 <div class="card-body p-4">
+                    <div class="card bg-light border-0 mb-4 p-3 rounded-3">
+                        <div class="row align-items-center">
+                            <div class="col-sm-6 mb-2 mb-sm-0">
+                                <span class="text-muted d-block small"><i class="fas fa-info-circle me-1"></i>Company License Status</span>
+                                @if (Model.IsLicenseActive)
+                                {
+                                    <span class="badge bg-success fs-6 mt-1">Active</span>
+                                }
+                                else if (string.Equals(Model.LicenseStatus, "New", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <span class="badge bg-info text-dark fs-6 mt-1">New</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary fs-6 mt-1">@(Model.LicenseStatus ?? "Pending")</span>
+                                }
+                            </div>
+                            <div class="col-sm-6 text-sm-end">
+                                <span class="text-muted d-block small"><i class="fas fa-id-card me-1"></i>License Number</span>
+                                @if (Model.IsLicenseActive)
+                                {
+                                    <span class="fw-bold fs-5 text-success font-monospace">@Model.DisplayLicenseNumber</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">Not Available</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
                     <form asp-action="EditProfile" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="ID" />
