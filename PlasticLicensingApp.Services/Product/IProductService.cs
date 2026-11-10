@@ -11,5 +11,7 @@ namespace PlasticLicensingApp.Services.Product
         Task<bool> SubmitProductAsync(ProductSubmissionViewModel model, int userId);
         Task<List<PlasticLicensingApp.Models.Product>> GetAllProductsAsync();
         Task<PlasticLicensingApp.Models.Product> CreateProductAsync(PlasticLicensingApp.Models.Product product);
+        Task<SupplierProductsViewModel?> GetSupplierProductsAsync(int supplierId, int userId);
+        Task<List<SupplierProductItemViewModel>?> GetProductListBySupplierAsync(int supplierId, int userId);
     }
 }

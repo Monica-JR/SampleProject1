@@ -85,6 +85,86 @@ namespace PlasticLicensingApp.Services.Product
             return true;
         }
 
+        public async Task<SupplierProductsViewModel?> GetSupplierProductsAsync(int supplierId, int userId)
+        {
+            var supplier = await _context.Suppliers
+                .FirstOrDefaultAsync(s => s.ID == supplierId && s.CreatedBy == userId);
+
+            if (supplier == null) return null;
+
+            var products = await _context.Products
+                .Include(p => p.Status)
+                .Where(p => p.SupplierID == supplierId)
+                .OrderByDescending(p => p.CreatedDate)
+                .ToListAsync();
+
+            var productIds = products.Select(p => p.ID).ToList();
+            var productParameters = await _context.ProductParameters
+                .Include(pp => pp.Parameter)
+                .Where(pp => productIds.Contains(pp.ProductID))
+                .ToListAsync();
+
+            var productItems = products.Select(p => new SupplierProductItemViewModel
+            {
+                Id = p.ID,
+                ProductName = p.ProductName ?? string.Empty,
+                StatusName = p.Status?.StatusName ?? "Pending",
+                CreatedDate = p.CreatedDate,
+                Parameters = productParameters
+                    .Where(pp => pp.ProductID == p.ID)
+                    .Select(pp => new ProductParameterDisplayViewModel
+                    {
+                        ParameterName = pp.Parameter?.ParameterName ?? "Parameter",
+                        ParameterValue = pp.ParameterValue ?? string.Empty
+                    }).ToList()
+            }).ToList();
+
+            var formModel = await GetProductSubmissionViewModelAsync(supplierId) ?? new ProductSubmissionViewModel { SupplierID = supplierId };
+
+            return new SupplierProductsViewModel
+            {
+                SupplierId = supplier.ID,
+                SupplierName = supplier.SupplierCompanyName ?? string.Empty,
+                Products = productItems,
+                CreateProductModel = formModel
+            };
+        }
+
+        public async Task<List<SupplierProductItemViewModel>?> GetProductListBySupplierAsync(int supplierId, int userId)
+        {
+            var supplier = await _context.Suppliers
+                .FirstOrDefaultAsync(s => s.ID == supplierId && s.CreatedBy == userId);
+
+            if (supplier == null) return null;
+
+            var products = await _context.Products
+                .Include(p => p.Status)
+                .Where(p => p.SupplierID == supplierId)
+                .OrderByDescending(p => p.CreatedDate)
+                .ToListAsync();
+
+            var productIds = products.Select(p => p.ID).ToList();
+            var productParameters = await _context.ProductParameters
+                .Include(pp => pp.Parameter)
+                .Where(pp => productIds.Contains(pp.ProductID))
+                .ToListAsync();
+
+            return products.Select(p => new SupplierProductItemViewModel
+            {
+                Id = p.ID,
+                ProductName = p.ProductName ?? string.Empty,
+                StatusName = p.Status?.StatusName ?? "Pending",
+                CreatedDate = p.CreatedDate,
+                Parameters = productParameters
+                    .Where(pp => pp.ProductID == p.ID)
+                    .Select(pp => new ProductParameterDisplayViewModel
+                    {
+                        ParameterName = pp.Parameter?.ParameterName ?? "Parameter",
+                        ParameterValue = pp.ParameterValue ?? string.Empty
+                    }).ToList()
+            }).ToList();
+        }
+
         public async Task<List<Models.Product>> GetAllProductsAsync()
         {
             return await _context.Products
@@ -95,7 +175,11 @@ namespace PlasticLicensingApp.Services.Product
 
         public async Task<Models.Product> CreateProductAsync(Models.Product product)
         {
-            product.StatusID = 1; // Default to Pending
+            var defaultStatus = await _context.Statuses
+                .FirstOrDefaultAsync(s => s.StatusName == "New" && s.StatusType == "Product")
+                ?? await _context.Statuses.FirstOrDefaultAsync();
+
+            product.StatusID = defaultStatus?.ID ?? 1;
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
             return product;

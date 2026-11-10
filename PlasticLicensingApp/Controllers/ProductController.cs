@@ -17,6 +17,30 @@ namespace PlasticLicensingApp.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> Index(int supplierId)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var viewModel = await _productService.GetSupplierProductsAsync(supplierId, userId);
+            if (viewModel == null) return NotFound();
+
+            return View(viewModel);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetBySupplier(int supplierId)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var products = await _productService.GetProductListBySupplierAsync(supplierId, userId);
+            if (products == null) return NotFound();
+
+            return Ok(products);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Create(int supplierId)
         {
             var viewModel = await _productService.GetProductSubmissionViewModelAsync(supplierId);
